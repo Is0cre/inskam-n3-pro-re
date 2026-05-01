@@ -13,6 +13,34 @@ from typing import Optional
 
 MAGIC = 0xFFEEFFEE
 
+KEY_BINDINGS = [
+    ("q", "Quit and stop sniffer"),
+    ("i", "Fetch device info"),
+    ("s", "Fetch status"),
+    ("l", "LED on"),
+    ("k", "LED off"),
+    ("p", "Probe item 0x02"),
+    ("c", "Send camera command (1,1,255)"),
+    ("t", "Run TCP/RTSP/HTTP checks"),
+    ("u", "Start UDP sniffer"),
+    ("v", "Start UDP sniffer + VLC"),
+    ("x", "Stop sniffer"),
+    ("m", "One-shot monitor (info+status)"),
+    ("r", "Reconnect Wi-Fi/socket"),
+    ("a", "Scan placeholder (disabled)"),
+    ("D", "Dangerous item scan (requires flag)"),
+]
+
+
+def key_help_line() -> str:
+    return " | ".join(f"{k}:{desc}" for k, desc in KEY_BINDINGS)
+
+
+def log_key_bindings(log: "EventLog"):
+    log.add("key map loaded:")
+    for key, desc in KEY_BINDINGS:
+        log.add(f"  {key} -> {desc}")
+
 
 def ts() -> str:
     return time.strftime("%Y-%m-%d %H:%M:%S")
@@ -309,6 +337,7 @@ def run_tui(stdscr, args):
     curses.curs_set(0)
     stdscr.nodelay(True)
     log = EventLog(args.log_file, quiet=args.quiet)
+    log_key_bindings(log)
     if not args.no_wifi:
         active = is_wifi_active(args.wifi)
         if args.force_wifi or not active:
@@ -370,6 +399,7 @@ def run_tui(stdscr, args):
         try:
             stdscr.addnstr(0, 0, hdr, max(1, w - 1))
             stdscr.addnstr(1, 0, "Keys: q i s l k p c t u v x m r a D", max(1, w - 1))
+            stdscr.addnstr(2, 0, key_help_line(), max(1, w - 1))
             mid = max(30, w // 2)
             stdscr.addnstr(3, 0, "Device/Status", mid - 1)
             for idx, s in enumerate(info_ascii[: max(1, h - 8)]):
